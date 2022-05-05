@@ -24,11 +24,12 @@ val _ =
   let
     fun put_configs (options, range) =
       let
-        fun put_config_of ((c, _), (v, _)) = "Config.put_generic (" ^ c ^ ") (" ^ v ^ ")"
+        fun put_config_of ((c, _), (v, _)) =
+          "Config.put_generic " ^ ML_Syntax.atomic c ^ " " ^ ML_Syntax.atomic v
         val put_configs_string =
           fold_rev (fn c => cons (put_config_of c)) options []
           |> String.concatWith " #> "
-        val decl = "fn _ => (" ^ put_configs_string ^ ")"
+        val decl = "fn _ => " ^ ML_Syntax.atomic put_configs_string
       in
         Isar_Cmd.declaration {syntax = false, pervasive = false} (Input.source false decl range)
       end

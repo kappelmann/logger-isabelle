@@ -13,36 +13,39 @@ val show_pos = Attrib.setup_config_bool @{binding "log_show_pos"} (K false)
 
 val log =
   let
-    val scan_default = Scan.lift o Scan.optional Args.name
-    val scan_option = Scan.lift (Scan.option Args.name)
-    fun info show_pos pos = String.concat [
-        "(if (", show_pos, ") then ",
-          "\"\\n\" ^ (Position.here (", ML_Syntax.print_position pos, "))",
-        "else \"\")"
-      ]
+    val scan_default = Scan.optional Args.name
+    val scan_option = Scan.option Args.name
     fun body ts (((log_level, logger), output_opt), show_pos_opt) ctxt =
       let
         val output = the_default ("Root_Logger.default_output " ^ log_level) output_opt
         val show_pos = the_default ("Config.get ctxt Logging_Antiquotations.show_pos") show_pos_opt
-        val info = info show_pos (Token.pos_of (hd ts))
+        val pos = Token.name_of_src ts |> snd
+        val info = String.concat [
+            "if ", ML_Syntax.atomic show_pos, " then ",
+              ML_Syntax.print_string "\n", " ^ ",
+              ML_Syntax.atomic ("Position.here " ^ ML_Syntax.atomic (ML_Syntax.print_position pos)),
+            "else ", ML_Syntax.print_string ""
+          ] |> ML_Syntax.atomic
         val code = String.concat [
-            "(fn ctxt => fn message_f => ", logger, ".log ctxt (", log_level, ") ",
-            "(", output, ") (fn _ => message_f () ^ ", info, "))"
-          ]
+            "fn ctxt => fn message_f => ", logger, ".log ctxt ", ML_Syntax.atomic log_level, " ",
+            ML_Syntax.atomic output, " (fn _ => message_f () ^ ", info, ")"
+          ] |> ML_Syntax.atomic
       in (K ("", code), ctxt) end
   in
-    (*use `declaration` rather than `inline` because `declaration` passes the token list, which can
-      be used to retrieve a position even when no arguments are passed to the scanner*)
     ML_Antiquotation.declaration @{binding "log"}
-      (scan_default "Root_Logger.INFO" -- scan_default "Logger" -- scan_option -- scan_option)
+      (scan_default "Root_Logger.INFO"
+        -- scan_default "Logger"
+        -- scan_option (*output channel*)
+        -- scan_option (*show_pos flag*)
+        |> Scan.lift)
       body
   end
 
 val new_logger = ML_Antiquotation.inline @{binding "new_logger"}
   (Scan.lift Args.name_position >>
     (fn (name, pos) => cat_lines [
-      "Logger(struct val name = \"" ^ name ^ "\"",
-      "val pos = " ^ ML_Syntax.print_position pos ^ "; end)"
+      "Logger(struct val name = " ^ ML_Syntax.atomic (ML_Syntax.print_string name),
+      "val pos = " ^ ML_Syntax.atomic (ML_Syntax.print_position pos) ^ "; end)"
     ]))
 
 (*setup the antiquotations*)
