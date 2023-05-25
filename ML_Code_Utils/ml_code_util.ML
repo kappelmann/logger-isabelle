@@ -32,11 +32,11 @@ type code = ML_Lex.token Antiquote.antiquote list
 val flat = flat
 val read = ML_Lex.read
 val reads = map read #> flat
-val commas = separate (ML_Lex.read ",") #> flat
+val commas = separate (read ",") #> flat
 
 fun enclose start close code = flat [start, code, close]
-val atomic = enclose (ML_Lex.read "(") (ML_Lex.read ")")
-val tuple = commas #> enclose (ML_Lex.read "(") (ML_Lex.read ")")
-val list = commas #> enclose (ML_Lex.read "[") (ML_Lex.read "]")
+val atomic = enclose (read "(") (read ")")
+val tuple = commas #> enclose (read "(") (read ")")
+val list = commas #> enclose (read "[") (read "]")
 
 end

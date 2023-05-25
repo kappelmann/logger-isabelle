@@ -40,26 +40,26 @@ end
 structure Binding_Tree : BINDING_TREE =
 struct
 
-structure ST = HOption_Tree(TableMap(Symtab))
+structure HOT = HOption_Tree(TableMap(Symtab))
 
 fun full_path_of binding =
   (Binding.path_of binding |> map fst) @ [Binding.name_of binding]
 
-type 'a binding_tree = 'a ST.hoption_tree
-val empty = ST.empty
-val is_empty = ST.is_empty
-fun lookup bt = ST.lookup bt o full_path_of
-exception INSERT = ST.INSERT
-fun insert p = ST.insert (apfst full_path_of p)
-fun insert_safe p = ST.insert_safe (apfst full_path_of p)
-exception DELETE = ST.DELETE
-fun delete binding = ST.delete (full_path_of binding)
-fun delete_safe  binding = ST.delete_safe (full_path_of binding)
-fun cut binding = ST.cut (full_path_of binding)
-fun cut_safe  binding = ST.cut_safe (full_path_of binding)
-fun map binding = ST.map (full_path_of binding)
-fun map_below binding = ST.map_below (full_path_of binding)
-val join = ST.join
+type 'a binding_tree = 'a HOT.hoption_tree
+val empty = HOT.empty
+val is_empty = HOT.is_empty
+fun lookup bt = HOT.lookup bt o full_path_of
+exception INSERT = HOT.INSERT
+fun insert p = HOT.insert (apfst full_path_of p)
+fun insert_safe p = HOT.insert_safe (apfst full_path_of p)
+exception DELETE = HOT.DELETE
+fun delete binding = HOT.delete (full_path_of binding)
+fun delete_safe  binding = HOT.delete_safe (full_path_of binding)
+fun cut binding = HOT.cut (full_path_of binding)
+fun cut_safe  binding = HOT.cut_safe (full_path_of binding)
+fun map binding = HOT.map (full_path_of binding)
+fun map_below binding = HOT.map_below (full_path_of binding)
+val join = HOT.join
 
 fun merge opttp =
   join (fn (data1, data2) => if is_none data1 then data2 else data1) opttp
