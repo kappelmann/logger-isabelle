@@ -1,7 +1,7 @@
 \<^marker>\<open>creator "Kevin Kappelmann"\<close>
 section \<open>ML Attributes\<close>
 theory ML_Attributes
-  imports Antiquotation_Utils
+  imports ML_Code_Utils
 begin
 
 paragraph \<open>Summary\<close>

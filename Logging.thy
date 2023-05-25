@@ -2,7 +2,7 @@
 section \<open>Logging\<close>
 theory Logging
   imports
-    Antiquotation_Utils
+    ML_Code_Utils
 begin
 paragraph \<open>Summary\<close>
 text \<open>Generic logging inspired by Apache's Log4J 2

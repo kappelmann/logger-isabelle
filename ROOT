@@ -2,9 +2,9 @@ chapter "Logging"
 
 session Logging = "Pure" +
   directories
-    Antiquotation_Utils
     Data_Structures
     ML_Attributes
+    ML_Code_Utils
   theories
     Logging
     ML_Attributes
