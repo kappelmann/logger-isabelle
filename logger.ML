@@ -113,7 +113,7 @@ type logger_output = log_level -> string -> unit
 
 fun default_output log_level =
   if log_level <= WARN then warning
-  else if log_level < TRACE then writeln
+  else if log_level < DEBUG then writeln
   else tracing
 
 type logger_config = {
