@@ -10,7 +10,11 @@ sig
     ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
   val run_declaration_attribute :
     ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
+  val run_Kdeclaration_attribute :
+    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
   val run_rule_attribute :
+    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
+  val run_Krule_attribute :
     ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
 
 end
@@ -53,29 +57,42 @@ fun run_declaration_attribute (code, pos) =
   let val code = ML_Lex.read "Thm.declaration_attribute" @ Util.atomic code
   in run_attribute (code, pos) end
 
+fun run_Kdeclaration_attribute (code, pos) =
+  let val code =
+    ML_Lex.read "Thm.declaration_attribute" @ (Util.atomic (ML_Lex.read "K" @ Util.atomic code))
+  in run_attribute (code, pos) end
+
 fun run_rule_attribute (code, pos) =
   let val code = ML_Lex.read "Thm.rule_attribute []" @ Util.atomic code
+  in run_attribute (code, pos) end
+
+fun run_Krule_attribute (code, pos) =
+  let val code =
+    ML_Lex.read "Thm.rule_attribute []" @ (Util.atomic (ML_Lex.read "K" @ Util.atomic code))
   in run_attribute (code, pos) end
 
 val _ =
   let val parse_pos_ml = Scan.lift (Parse.position Parse.embedded_ml)
   in
-    (Theory.setup
+    Theory.setup
       (Attrib.setup \<^binding>\<open>ML_attr\<close>
         (parse_pos_ml >> run_attribute)
-        "attribute as ML code");
-    Theory.setup
-      (Attrib.setup \<^binding>\<open>ML_mattr\<close>
+        "attribute as ML code" #>
+      Attrib.setup \<^binding>\<open>ML_mattr\<close>
         (parse_pos_ml >> run_mixed_attribute)
-        "mixed attribute as ML code");
-    Theory.setup
-      (Attrib.setup \<^binding>\<open>ML_dattr\<close>
+        "mixed attribute as ML code" #>
+      Attrib.setup \<^binding>\<open>ML_dattr\<close>
         (parse_pos_ml >> run_declaration_attribute)
-        "declaration attribute as ML code");
-    Theory.setup
-      (Attrib.setup \<^binding>\<open>ML_rattr\<close>
+        "declaration attribute as ML code" #>
+      Attrib.setup \<^binding>\<open>ML_Kdattr\<close>
+        (parse_pos_ml >> run_Kdeclaration_attribute)
+        "context only declaration attribute as ML code" #>
+      Attrib.setup \<^binding>\<open>ML_rattr\<close>
         (parse_pos_ml >> run_rule_attribute)
-        "rule attribute as ML code"))
+        "rule attribute as ML code" #>
+      Attrib.setup \<^binding>\<open>ML_Krattr\<close>
+        (parse_pos_ml >> run_Krule_attribute)
+        "theorem only rule attribute as ML code")
   end
 
 end
