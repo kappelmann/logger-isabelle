@@ -1,4 +1,4 @@
-(*  Title:      Logging/Data_Structures/map.ML
+(*  Title:      ML_Logger/Data_Structures/map.ML
     Author:     Kevin Kappelmann
 
 Key-Value Maps

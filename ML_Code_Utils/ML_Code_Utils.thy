@@ -5,7 +5,7 @@ theory ML_Code_Utils
 begin
 
 paragraph \<open>Summary\<close>
-text \<open>Utilities for manipulating parsed ML code.\<close>
+text \<open>Utilities to manipulate parsed ML code.\<close>
 
 ML_file\<open>ml_code_util.ML\<close>
 

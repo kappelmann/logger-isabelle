@@ -1,28 +1,25 @@
+(*  Title:      ML_Logger/ml_attribute.ML
+    Author:     Kevin Kappelmann
+
+Attributes from ML code.
+*)
 signature ML_ATTRIBUTE =
 sig
-
   val get_thm : Context.generic -> thm
   val put_thm : thm -> Context.generic -> Context.generic
 
-  val run_attribute :
-    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
-  val run_mixed_attribute :
-    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
-  val run_declaration_attribute :
-    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
-  val run_Kdeclaration_attribute :
-    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
-  val run_rule_attribute :
-    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
-  val run_Krule_attribute :
-    ML_Lex.token Antiquote.antiquote list * Position.T -> attribute
-
+  val run_attribute : ML_Code_Util.code * Position.T -> attribute
+  val run_mixed_attribute : ML_Code_Util.code * Position.T -> attribute
+  val run_declaration_attribute : ML_Code_Util.code * Position.T -> attribute
+  val run_map_context : ML_Code_Util.code * Position.T -> attribute
+  val run_rule_attribute : ML_Code_Util.code * Position.T -> attribute
+  val run_Krule_attribute : ML_Code_Util.code * Position.T -> attribute
 end
 
 structure ML_Attribute : ML_ATTRIBUTE =
 struct
 
-structure Util = ML_Code_Util
+structure U = ML_Code_Util
 
 structure Thm_Data = Generic_Data(
   type T = thm
@@ -36,63 +33,58 @@ val put_thm = Thm_Data.put
 fun run_attribute (code, pos) (context, thm) =
   let
     val context = put_thm thm context
-    val context_internal = Util.internal_name "context" |> Util.read
-    val thm_internal = Util.internal_name "thm" |> Util.read
+    val (context_internal, thm_internal) = apply2 (U.read o U.internal_name) ("context", "thm")
     val code =
-      Util.read "Context.>> (fn" @ context_internal @ Util.read "=>" @
-      Util.read "let val" @ thm_internal @ Util.read "= ML_Attribute.get_thm" @
-        context_internal @
-      Util.read "val" @ Util.tuple [thm_internal, context_internal] @ Util.read "=" @
-        Util.read "Thm.apply_attribute" @ Util.atomic code @ thm_internal @ context_internal @
-      Util.read "in ML_Attribute.put_thm" @ thm_internal @ context_internal @ Util.read "end)"
+      U.read "Context.>> (fn" @ context_internal @ U.read "=>" @
+      U.read "let val" @ thm_internal @ U.read "= ML_Attribute.get_thm" @ context_internal @
+      U.read "val" @ U.tuple [thm_internal, context_internal] @ U.read "=" @
+        U.read "Thm.apply_attribute" @ U.atomic code @ thm_internal @ context_internal @
+      U.read "in ML_Attribute.put_thm" @ thm_internal @ context_internal @ U.read "end)"
     val context = ML_Context.expression pos code context
     val thm = get_thm context
   in (SOME context, SOME thm) end
 
 fun run_mixed_attribute (code, pos) =
-  let val code = ML_Lex.read "Thm.mixed_attribute" @ Util.atomic code
+  let val code = U.read "Thm.mixed_attribute" @ U.atomic code
   in run_attribute (code, pos) end
 
 fun run_declaration_attribute (code, pos) =
-  let val code = ML_Lex.read "Thm.declaration_attribute" @ Util.atomic code
+  let val code = U.read "Thm.declaration_attribute" @ U.atomic code
   in run_attribute (code, pos) end
 
-fun run_Kdeclaration_attribute (code, pos) =
-  let val code =
-    ML_Lex.read "Thm.declaration_attribute" @ (Util.atomic (ML_Lex.read "K" @ Util.atomic code))
-  in run_attribute (code, pos) end
+fun run_map_context (code, pos) (context, _) =
+  let val code = U.read "Thm.declaration_attribute" @ (U.atomic (U.read "K" @ U.atomic code))
+  in run_attribute (code, pos) (context, Drule.dummy_thm) end
 
 fun run_rule_attribute (code, pos) =
-  let val code = ML_Lex.read "Thm.rule_attribute []" @ Util.atomic code
+  let val code = U.read "Thm.rule_attribute []" @ U.atomic code
   in run_attribute (code, pos) end
 
 fun run_Krule_attribute (code, pos) =
   let val code =
-    ML_Lex.read "Thm.rule_attribute []" @ (Util.atomic (ML_Lex.read "K" @ Util.atomic code))
+    U.read "Thm.rule_attribute []" @ (U.atomic (U.read "K" @ U.atomic code))
   in run_attribute (code, pos) end
 
-val _ =
-  let val parse_pos_ml = Scan.lift (Parse.position Parse.embedded_ml)
-  in
-    Theory.setup
-      (Attrib.setup \<^binding>\<open>ML_attr\<close>
-        (parse_pos_ml >> run_attribute)
-        "attribute as ML code" #>
-      Attrib.setup \<^binding>\<open>ML_mattr\<close>
-        (parse_pos_ml >> run_mixed_attribute)
-        "mixed attribute as ML code" #>
-      Attrib.setup \<^binding>\<open>ML_dattr\<close>
-        (parse_pos_ml >> run_declaration_attribute)
-        "declaration attribute as ML code" #>
-      Attrib.setup \<^binding>\<open>ML_Kdattr\<close>
-        (parse_pos_ml >> run_Kdeclaration_attribute)
-        "context only declaration attribute as ML code" #>
-      Attrib.setup \<^binding>\<open>ML_rattr\<close>
-        (parse_pos_ml >> run_rule_attribute)
-        "rule attribute as ML code" #>
-      Attrib.setup \<^binding>\<open>ML_Krattr\<close>
-        (parse_pos_ml >> run_Krule_attribute)
-        "theorem only rule attribute as ML code")
-  end
+val parse_code_pos = Scan.lift (Parse.position U.parse_code)
+
+val _ = Theory.setup
+  (Attrib.setup \<^binding>\<open>ML_attr\<close>
+    (parse_code_pos >> run_attribute)
+    "attribute as ML code" #>
+  Attrib.setup \<^binding>\<open>ML_mattr\<close>
+    (parse_code_pos >> run_mixed_attribute)
+    "mixed attribute as ML code" #>
+  Attrib.setup \<^binding>\<open>ML_dattr\<close>
+    (parse_code_pos >> run_declaration_attribute)
+    "declaration attribute as ML code" #>
+  Attrib.setup \<^binding>\<open>ML_map_context\<close>
+    (parse_code_pos >> run_map_context)
+    "context only attribute as ML code" #>
+  Attrib.setup \<^binding>\<open>ML_rattr\<close>
+    (parse_code_pos >> run_rule_attribute)
+    "rule attribute as ML code" #>
+  Attrib.setup \<^binding>\<open>ML_Krattr\<close>
+    (parse_code_pos >> run_Krule_attribute)
+    "theorem only rule attribute as ML code")
 
 end

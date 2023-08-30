@@ -1,33 +1,33 @@
-(*  Title:      Logging/antiquotations.ML
+(*  Title:      ML_Logger/logging_antiquotation.ML
     Author:     Kevin Kappelmann
 *)
-signature LOGGING_ANTIQUOTATIONS =
+signature LOGGING_ANTIQUOTATION =
 sig
-  val show_pos: bool Config.T
+  val show_log_pos: bool Config.T
 end
 
-structure Logging_Antiquotations : LOGGING_ANTIQUOTATIONS =
+structure Logging_Antiquotation : LOGGING_ANTIQUOTATION =
 struct
 
 structure Util = ML_Code_Util
 
-val show_pos = Attrib.setup_config_bool @{binding "log_show_pos"} (K false)
+val show_log_pos = Attrib.setup_config_bool @{binding "show_log_pos"} (K false)
 
 val log =
   let
-    fun body ts ((log_level, logger_binding), show_pos_opt) =
+    fun body ts ((log_level, logger_binding), show_log_pos_opt) =
       let
         val (_, pos) = Token.name_of_src ts
         val ctxt_internal = Util.internal_name "ctxt"
-        val show_pos = the_default
-          (Util.spaces ["Config.get", ctxt_internal, " Logging_Antiquotations.show_pos"])
-          show_pos_opt
-        val info = Util.spaces [
-            "if", ML_Syntax.atomic show_pos,
+        val show_log_pos = the_default
+          (Util.spaces ["Config.get", ctxt_internal, " Logging_Antiquotation.show_log_pos"])
+          show_log_pos_opt
+        val additional_info = Util.spaces [
+            "if", ML_Syntax.atomic show_log_pos,
             "then",
               ML_Syntax.print_string "\n", "^",
               ML_Syntax.atomic
-                ("Position.here" ^ ML_Syntax.atomic (ML_Syntax.print_position pos)),
+                ("Position.here " ^ ML_Syntax.atomic (ML_Syntax.print_position pos)),
             "else", ML_Syntax.print_string ""
           ] |> ML_Syntax.atomic
         val message_f_internal = Util.internal_name "message_f"
@@ -36,7 +36,7 @@ val log =
             ML_Syntax.atomic logger_binding,
             ML_Syntax.atomic log_level,
             ctxt_internal,
-            ML_Syntax.atomic (Util.spaces ["fn _ =>", message_f_internal, "() ^", info])
+            ML_Syntax.atomic (Util.spaces ["fn _ =>", message_f_internal, "() ^", additional_info])
           ] |> ML_Syntax.atomic
       in pair (K ("", code)) end
   in

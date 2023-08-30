@@ -1,8 +1,9 @@
 \<^marker>\<open>creator "Kevin Kappelmann"\<close>
-section \<open>Logging\<close>
-theory Logging
+chapter \<open>ML Logger\<close>
+theory ML_Logger
   imports
     ML_Code_Utils
+    ML_Attributes
 begin
 paragraph \<open>Summary\<close>
 text \<open>Generic logging inspired by Apache's Log4J 2
@@ -14,7 +15,7 @@ ML_file\<open>Data_Structures/hoption_tree.ML\<close>
 ML_file\<open>Data_Structures/binding_tree.ML\<close>
 
 ML_file\<open>logger.ML\<close>
-ML_file\<open>logging_antiquotations.ML\<close>
+ML_file\<open>logging_antiquotation.ML\<close>
 
 
 end

@@ -1,4 +1,4 @@
-(*  Title:      Logging/Data_Structures/hoption_tree.ML
+(*  Title:      ML_Logger/Data_Structures/hoption_tree.ML
     Author:     Kevin Kappelmann
 
 Hierarchical trees with optional values.
@@ -31,11 +31,10 @@ sig
   (*maps entry*)
   val map : word -> ('a option -> 'a option) -> 'a hoption_tree -> 'a hoption_tree
   (*maps entry and all entries in subtrees*)
-  val map_below : word -> ('a option -> 'a option) ->
-    'a hoption_tree -> 'a hoption_tree
+  val map_below : word -> ('a option -> 'a option) -> 'a hoption_tree -> 'a hoption_tree
 
-  val join : ('a option * 'a option -> 'a option) ->
-    'a hoption_tree * 'a hoption_tree -> 'a hoption_tree
+  val join : ('a option * 'a option -> 'a option) -> 'a hoption_tree * 'a hoption_tree ->
+    'a hoption_tree
 end
 
 functor HOption_Tree(M : MAP) : HOPTION_TREE =

@@ -1,4 +1,4 @@
-(*  Title:      Logging/Data_Structures/binding_tree.ML
+(*  Title:      ML_Logger/Data_Structures/binding_tree.ML
     Author:     Kevin Kappelmann
 
 A hierarchical tree indexed on bindings.
@@ -26,14 +26,12 @@ sig
   val cut_safe : binding -> 'a binding_tree -> 'a binding_tree
 
   (*maps entry*)
-  val map : binding -> ('a option -> 'a option) -> 'a binding_tree ->
-    'a binding_tree
+  val map : binding -> ('a option -> 'a option) -> 'a binding_tree -> 'a binding_tree
   (*maps entry and all entries in subtrees*)
-  val map_below : binding -> ('a option -> 'a option) ->
-    'a binding_tree -> 'a binding_tree
+  val map_below : binding -> ('a option -> 'a option) -> 'a binding_tree -> 'a binding_tree
 
-  val join : ('a option * 'a option -> 'a option) ->
-    'a binding_tree * 'a binding_tree -> 'a binding_tree
+  val join : ('a option * 'a option -> 'a option) -> 'a binding_tree * 'a binding_tree ->
+    'a binding_tree
   val merge : 'a binding_tree * 'a binding_tree -> 'a binding_tree
 end
 
@@ -42,8 +40,7 @@ struct
 
 structure HOT = HOption_Tree(TableMap(Symtab))
 
-fun full_path_of binding =
-  (Binding.path_of binding |> map fst) @ [Binding.name_of binding]
+fun full_path_of binding = (Binding.path_of binding |> map fst) @ [Binding.name_of binding]
 
 type 'a binding_tree = 'a HOT.hoption_tree
 val empty = HOT.empty
@@ -61,7 +58,6 @@ fun map binding = HOT.map (full_path_of binding)
 fun map_below binding = HOT.map_below (full_path_of binding)
 val join = HOT.join
 
-fun merge opttp =
-  join (fn (data1, data2) => if is_none data1 then data2 else data1) opttp
+fun merge opttp = join (fn (data1, data2) => if is_none data1 then data2 else data1) opttp
 
 end

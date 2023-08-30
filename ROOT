@@ -1,12 +1,9 @@
-chapter "Logging"
-
-session Logging = "Pure" +
+session ML_Logger = "Pure" +
   directories
     Data_Structures
     ML_Attributes
     ML_Code_Utils
   theories
-    Logging
+    ML_Logger
     ML_Attributes
     Setup_Result_Commands
-
